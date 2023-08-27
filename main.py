@@ -1,47 +1,42 @@
-import threading
-
+import face_recognition
+import os, sys
 import cv2
-from deepface import DeepFace
+import numpy as np
+import math
 
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+def face_confidence(face_distance, face_match_threshold=0.6):
+    range = (1.0 - face_match_threshold)
+    linear_value = (1.0 - face_distance) / (range * 2.0)
 
-counter = 0
-face_match = False
+    if face_distance > face_match_threshold:
+        return str(round(linear_val * 100,2)) + '%'
+    else:
+        value = (linear_val +((1.0 - linear_val) * math.pow((linear_val - 0.5) * 2, 0.2))) * 100
+        return str(round(value, 2)) + '%'
 
-Reference_img = cv2.imread("reference.jpg")
 
-def check_face(frame):
-    global face_match
-    try:
-        if DeepFace.verify(frame, Reference_img.copy())['verified']:
-            face_match = True
-        else:
-            face_match = False
-    except ValueError:
-        face_match = False
+class FaceRecognition:
+    face_locations = []
+    face_encodings = []
+    face_name = []
+    known_face_encodings = []
+    known_face_names = []
+    process_current_frame = True
 
-while True:
-    ret, frame = cap.read()
+    def __init__(self):
+        self.encode_faces()
 
-    if ret:
-        if counter % 30 == 0:
-            try:
-                threading.Thread(target=check_face, args=(frame.copy(),)).start()
-            except ValueError:
-                pass
-        counter += 1
-        if face_match:
-            cv2.putText(frame, "MATCH!", (20,450), cv2.FONT_HERSHEY_COMPLEX, 2, (0,255,0), 3)
-        else:
-            cv2.putText(frame, "NO MATCH!", (20,450), cv2.FONT_HERSHEY_COMPLEX, 2, (0,0,255), 3)
+    def encode_faces(self):
+        for image in os.listdir('faces'):
+            face_image = face_recognition.load_image_file(f'faces/{image}')
+            face_encoding = face_recognition.face_encodings(face_image)[0]
 
-        cv2.imshow("video", frame)
+            self.known_face_encodings.append(face_encoding)
+            self.known_face_names.append(image)
+
+        print(self.known_face_names)
         
-    key = cv2.waitKey(1)
-    if key == ord("q"):
-        break
 
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+    fr = FaceRecognition()
