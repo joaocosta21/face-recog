@@ -38,7 +38,7 @@ class FaceRecognition:
         print(self.known_face_names)
         
     def run_recognition(self):
-        video_capture = cv2.VideoCapture(-1)
+        video_capture = cv2.VideoCapture(0)
         
         if not video_capture.isOpened():
             sys.exit('Video source not found...')
@@ -48,7 +48,7 @@ class FaceRecognition:
                 
             if self.process_current_frame:
                 small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-                rgb_small_frame = small_frame[:, :, ::-1]
+                rgb_small_frame = np.ascontiguousarray(small_frame[:, :, ::-1])
                 
                 self.face_locations = face_recognition.face_locations(rgb_small_frame)
                 self.face_encodings = face_recognition.face_encodings(rgb_small_frame, self.face_locations)
@@ -64,7 +64,7 @@ class FaceRecognition:
                     
                     if matches[best_match_index]:
                         name = self.known_face_names[best_match_index]
-                        confidence = face_confidence(face_distance[best_match_index])
+                        confidence = face_confidence(face_distances[best_match_index])
                     
                     self.face_names.append(f'{name} ({confidence})')
                     
