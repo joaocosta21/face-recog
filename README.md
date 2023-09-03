@@ -5,3 +5,5 @@
     
 # debug
     check cameras associated with computer - v4l2-ctl --list-devices
+
+to be updates soon
